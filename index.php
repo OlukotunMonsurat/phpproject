@@ -236,6 +236,16 @@ input[type=text] {
   .chat-text { font-size: 13px; }
   .chat-message { padding: 8px; }
 }
+footer {
+  text-align: center;
+  padding: 15px;
+  background: rgba(0, 0, 0, 0.05);
+  color: #444;
+  font-weight: bold;
+  border-top: 1px solid #ccc;
+  margin-top: 40px;
+}
+
 </style>
 </head>
 <script>
@@ -370,5 +380,9 @@ function previewImage(event) {
   reader.readAsDataURL(event.target.files[0]);
 }
 </script>
+
+<footer>&copy; <?= date("Y") ?> wealthDEV — All rights reserved</footer>
+
+
 </body>
 </html>
