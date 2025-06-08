@@ -70,5 +70,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             </div>
         </div>
     <form>
+      <footer style="text-align: center; margin-top: 40px; color: gray; font-size: 14px;">
+      WealthDEV &copy; <?php echo date("Y"); ?> All rights reserved.
+    </footer>
 </body>
 </html>                     
