@@ -19,16 +19,28 @@ if (isset($_GET['darkmode'])) {
 $showContent = isset($_POST['show']);
 
 $descriptions = [
-    "group member dev.jpg" => ["Name" => "Olukotun Monsurat BOLAJI", "Occupation" => "Software Developer"],
-    "group member 1.jpg" => ["Name" => "John Doe", "Occupation" => "Frontend Developer"],
-    "group member 2.jpg" => ["Name" => "John Smith", "Occupation" => "Backend Developer"],
-    "group member 3.jpg" => ["Name" => "John Ali", "Occupation" => "UI/UX Designer"],
-    "group member 4.jpg" => ["Name" => "John gate", "Occupation" => "Designer"]
+   
 ];
 
 $images = glob("images/*.jpg");
 $currentSlide = isset($_POST['slide']) ? (int)$_POST['slide'] : 0;
 $nextSlide = ($currentSlide + 1) % count($images);
+
+if (isset($_POST['upload']) && isset($_FILES['profile_pic'])) {
+    $targetDir = "profile_pics/";
+    $username = $_SESSION['username'];
+    $targetFile = $targetDir . basename($username . ".jpg");
+
+    $imageFileType = strtolower(pathinfo($_FILES["profile_pic"]["name"], PATHINFO_EXTENSION));
+    $check = getimagesize($_FILES["profile_pic"]["tmp_name"]);
+
+    if ($check !== false && in_array($imageFileType, ["jpg", "jpeg", "png", "gif"])) {
+        move_uploaded_file($_FILES["profile_pic"]["tmp_name"], $targetFile);
+        $uploadSuccess = true;
+    } else {
+        $uploadError = "Invalid image file. Please upload a JPG, PNG, or GIF.";
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -45,6 +57,47 @@ body {
   padding: 20px;
   text-align: center;
 }
+.slide-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px auto;
+  max-width: 360px;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 20px;
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.slide-image {
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+  border-radius: 12px;
+  display: block;
+  object-fit: cover;
+}
+
+.image-description {
+  margin-top: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(6px);
+  border-radius: 10px;
+  padding: 12px;
+  color: #000;
+  font-size: 14px;
+  width: 100%;
+  text-align: left;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.image-description p {
+  margin: 5px 0;
+  line-height: 1.5;
+}
+
+
 img {
   max-width: 100%;
   height: auto;
@@ -52,6 +105,14 @@ img {
   display: block;
   margin: 10px auto;
 }
+
+
+@media (min-width: 768px) {
+  img {
+    max-width: 300px; 
+  }
+}
+
 .chat-box {
   width: 95%;
   max-width: 500px;
@@ -226,21 +287,37 @@ document.addEventListener('DOMContentLoaded', function () {
 <?php else: ?>
   <div>
     <h2>Welcome, <?= htmlspecialchars($_SESSION['username']) ?>!</h2>
-    <h3>Meet Your Group Members🐟❤️</h3>
+    <h3>look down⬇️🐟❤️</h3>
+
+    <!-- 🆕 Profile Picture Upload -->
+    <h4>Upload Your Profile Picture To Start Chat With Other Fishes🐟🐠</h4>
+    <form method="post" enctype="multipart/form-data">
+      <input type="file" name="profile_pic" accept="image/*" required onchange="previewImage(event)" />
+      <button type="submit" name="upload">Upload</button>
+      <input type="hidden" name="show" value="1">
+      <img id="preview" />
+    </form>
+    <?php if (!empty($uploadSuccess)) echo "<p style='color:green;'>uploaded!</p>"; ?>
+    <?php if (!empty($uploadError)) echo "<p style='color:red;'>$uploadError</p>"; ?>
+
+
     <form method="post">
       <input type="hidden" name="show" value="1" />
       <input type="hidden" name="slide" value="<?= $nextSlide ?>" />
-      <img src="<?= $images[$currentSlide] ?>" alt="Slide" />
-      <?php
-        $filename = basename($images[$currentSlide]);
-        if (isset($descriptions[$filename])) {
-            echo "<div class='image-description'>";
-            foreach ($descriptions[$filename] as $key => $value) {
-                echo "<p><strong>$key:</strong> $value</p>";
-            }
-            echo "</div>";
+    <div class="slide-container">
+  <img src="<?= $images[$currentSlide] ?>" alt="Slide" class="slide-image" />
+  <?php
+    $filename = basename($images[$currentSlide]);
+    if (isset($descriptions[$filename])) {
+        echo "<div class='image-description'>";
+        foreach ($descriptions[$filename] as $key => $value) {
+            echo "<p><strong>$key:</strong> $value</p>";
         }
-      ?>
+        echo "</div>";
+    }
+  ?>
+</div>
+
       <br />
       <input type="submit" value="Next Image" />
     </form>
@@ -282,5 +359,16 @@ document.addEventListener('DOMContentLoaded', function () {
     <button type="submit">Logout</button>
   </form>
 <?php endif; ?>
+<script>
+function previewImage(event) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const preview = document.getElementById('preview');
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+  };
+  reader.readAsDataURL(event.target.files[0]);
+}
+</script>
 </body>
 </html>
