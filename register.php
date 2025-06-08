@@ -58,9 +58,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <body class="<?php echo $darkMode ? 'dark-mode' : ''; ?>">
 
 
-  <a href="?darkmode=<?php echo $darkMode ? '0' : '1'; ?>" class="dark-toggle">
-    <?php echo $darkMode ? '☀️ Light Mode' : '🌙 Dark Mode'; ?>
-  </a>
+ 
     <div class="form-box register">
        
         <?php if (!empty($error)) echo "<p style='color:red;'>$error</p>"; ?>
