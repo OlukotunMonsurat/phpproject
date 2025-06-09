@@ -203,9 +203,9 @@ img {
   font-size: 14px;
   line-height: 1.4;
   margin-top: 4px;
-  word-wrap: break-word; /* breaks long words */
-  overflow-wrap: break-word; /* ensures compatibility */
-  white-space: pre-wrap; /* preserves line breaks but wraps long text */
+  word-wrap: break-word; 
+  overflow-wrap: break-word; 
+  white-space: pre-wrap; 
 }
 .chat-message {
   background-color: rgba(0, 0, 0, 0.6);
@@ -214,7 +214,7 @@ img {
   margin-bottom: 12px;
   color: white;
   width: 100%;
-  box-sizing: border-box; /* <-- Ensure padding stays within bounds */
+  box-sizing: border-box; 
   display: flex;
   flex-direction: column;
   overflow-wrap: break-word;
@@ -242,7 +242,7 @@ img {
 }
 .chat-message,
 .chat-text {
-  text-align: left; /* force left alignment */
+  text-align: left; 
 }
 
 .chat-text {
