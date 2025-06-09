@@ -7,3 +7,5 @@
 {"username":"Mobola","message":"texting","time":"18:22"}
 {"username":"Mobola","message":"testing","time":"18:29"}
 {"username":"wealth","message":"hi","time":"23:15"}
+{"username":"Mobola","message":"Matric no 121","time":"13:01"}
+{"username":"Mobola","message":"testing","time":"17:59"}

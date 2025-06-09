@@ -6,21 +6,15 @@ if (!isset($_SESSION['username']) && !isset($_POST['show'])) {
     exit;
 }
 
-$darkMode = false;
-if (isset($_GET['darkmode'])) {
-    $darkMode = $_GET['darkmode'] === '1';
-    setcookie('darkmode', $darkMode ? '1' : '0', time() + (86400 * 30), "/");
-    header("Location: " . $_SERVER['PHP_SELF']);
-    exit;
-} elseif (isset($_COOKIE['darkmode'])) {
-    $darkMode = $_COOKIE['darkmode'] === '1';
-}
+
 
 $showContent = isset($_POST['show']);
 
 $descriptions = [
-   
+    
+    
 ];
+
 
 $images = glob("images/*.jpg");
 $currentSlide = isset($_POST['slide']) ? (int)$_POST['slide'] : 0;
@@ -57,6 +51,86 @@ body {
   padding: 20px;
   text-align: center;
 }
+.audio-floating {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+#audio-toggle {
+  background: #0077aa;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  transition: background 0.3s ease;
+}
+
+#audio-toggle:hover {
+  background: #005577;
+}
+
+#audio-toggle:focus {
+  outline: none;
+}
+
+#audio-toggle:active {
+  transform: scale(0.95);
+}
+
+#audio-toggle.hidden {
+  display: none;
+}
+
+.audio-floating audio {
+  display: none;
+  width: 250px;
+  max-width: 90vw;
+  border-radius: 10px;
+}
+
+.audio-floating audio.show {
+  display: block;
+}
+
+
+.game-container {
+  margin: 20px auto;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  max-width: 700px;
+  color: #fff;
+  text-shadow: 1px 1px 2px #000;
+}
+.game-container button {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: #003344;
+  padding: 10px 15px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.game-container button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  color: #000;
+}
+
+
 .slide-container {
   display: flex;
   flex-direction: column;
@@ -281,12 +355,246 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
-<body>
+<body >
+<div class="audio-floating">
+  <button id="audio-toggle" title="Toggle Audio">🔊</button>
+  <audio id="myAudio" src="audio/love.mp3" controls></audio>
+</div>
+
+
+
+<script>
+  const audioToggle = document.getElementById('audio-toggle');
+  const audioPlayer = document.getElementById('myAudio');
+
+  audioToggle.addEventListener('click', () => {
+    audioPlayer.classList.toggle('show');
+  });
+</script>
+
+
+
 <div class="fish-background">
   <div class="fish"><?php for ($i = 0; $i < 15; $i++): ?><div class="koiCoil"></div><?php endfor; ?></div>
   <div class="fish"><?php for ($i = 0; $i < 15; $i++): ?><div class="koiCoil"></div><?php endfor; ?></div>
   <div class="seaLevel"></div>
 </div>
+<?php
+
+
+$game = $_POST['game'] ?? null;
+$result = '';
+$message = '';
+$showGame = isset($_POST['play_game']) || in_array($game, ['rps', 'guess', 'dice', 'math', 'scramble']);
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['play_game'])) {
+    switch ($_POST['game']) {
+      case 'memory':
+    $emojis = ['🍎','🐟','🌈','🚀','🎵','🍕'];
+    shuffle($emojis);
+    $_SESSION['memory_board'] = array_merge($emojis, $emojis);
+    shuffle($_SESSION['memory_board']);
+    $_SESSION['memory_flipped'] = [];
+    $result = "Start flipping! Memory game coming soon!";
+    break;
+
+case 'speed':
+    $a = rand(10, 99);
+    $b = rand(10, 99);
+    $_SESSION['speed_answer'] = $a + $b;
+    $_SESSION['speed_time'] = time();
+    $result = "What is $a + $b?";
+    break;
+
+case 'typing':
+    $sentences = [
+      "The quick brown fox jumps over the lazy dog",
+      "PHP is fun to learn and powerful",
+      "Sea breeze feels nice on a sunny day"
+    ];
+    $sentence = $sentences[array_rand($sentences)];
+    $_SESSION['typing_sentence'] = $sentence;
+    $_SESSION['typing_start'] = microtime(true);
+    $result = "Type this: <br><b>$sentence</b>";
+    break;
+
+        case 'rps':
+            $choices = ['rock', 'paper', 'scissors'];
+            $user = $_POST['rps_choice'];
+            $computer = $choices[rand(0, 2)];
+            if ($user === $computer) {
+                $result = "It's a tie! You both chose $user.";
+            } elseif (
+                ($user === 'rock' && $computer === 'scissors') ||
+                ($user === 'scissors' && $computer === 'paper') ||
+                ($user === 'paper' && $computer === 'rock')
+            ) {
+                $result = "You win! $user beats $computer.";
+            } else {
+                $result = "You lose! $computer beats $user.";
+            }
+            break;
+
+        case 'guess':
+            $guess = (int)$_POST['guess_input'];
+            if (!isset($_SESSION['target'])) $_SESSION['target'] = rand(1, 20);
+            $target = $_SESSION['target'];
+            if ($guess === $target) {
+                $result = "🎉 Correct! You guessed the number $target.";
+                unset($_SESSION['target']);
+            } elseif ($guess < $target) {
+                $result = "Too low! Try again.";
+            } else {
+                $result = "Too high! Try again.";
+            }
+            break;
+
+        case 'dice':
+            $die1 = rand(1, 6);
+            $die2 = rand(1, 6);
+            $sum = $die1 + $die2;
+            $result = "🎲 You rolled a $die1 and a $die2. Total: $sum";
+            break;
+
+        case 'math':
+    $userAnswer = isset($_POST['math_answer']) ? (int)$_POST['math_answer'] : null;
+    $correctAnswer = $_SESSION['math_answer'] ?? null;
+
+    if ($userAnswer !== null && $correctAnswer !== null) {
+        if ($userAnswer === $correctAnswer) {
+            $result = "✅ Correct!";
+        } else {
+            $result = "❌ Wrong! Correct answer was $correctAnswer.";
+        }
+        unset($_SESSION['math_question'], $_SESSION['math_answer']);
+    } else {
+        $result = "⚠️ Please submit an answer.";
+    }
+    break;
+
+        case 'scramble':
+            $guess = strtolower(trim($_POST['scramble_guess']));
+            $original = $_SESSION['scramble_word'] ?? '';
+            if ($guess === $original) {
+                $result = "🎉 Correct! The word was '$original'.";
+            } else {
+                $result = "❌ Nope! Try again.";
+            }
+            break;
+
+            case 'speed':
+    $userAnswer = (int)$_POST['speed_answer'];
+    $correct = $_SESSION['speed_answer'];
+    $timeTaken = time() - $_SESSION['speed_time'];
+    if ($userAnswer === $correct) {
+        $result = "✅ Correct in $timeTaken seconds!";
+    } else {
+        $result = "❌ Wrong. Correct was $correct.";
+    }
+    unset($_SESSION['speed_answer'], $_SESSION['speed_time']);
+    break;
+
+case 'typing':
+    $userInput = trim($_POST['typed']);
+    $original = $_SESSION['typing_sentence'];
+    $elapsed = round(microtime(true) - $_SESSION['typing_start'], 2);
+    if ($userInput === $original) {
+        $result = "⌨️ Well done! You typed it in $elapsed seconds.";
+    } else {
+        $result = "❌ Try again! You had typos.";
+    }
+    unset($_SESSION['typing_sentence'], $_SESSION['typing_start']);
+    break;
+
+    }
+}
+?>
+
+<div class="game-container">
+ 
+
+  <h2>🎯 Choose a Game to Pass Time from Boredom</h2>
+  <form method="post" style="display: flex; flex-wrap: wrap; gap: 10px;">
+    <button name="game" value="rps">🪨📄✂️ Rock Paper Scissors</button>
+    <button name="game" value="guess">🔢 Guess the Number</button>
+    <button name="game" value="dice">🎲 Dice Roll</button>
+    <button name="game" value="math">➗ Math Quiz</button>
+    <button name="game" value="scramble">🔤 Word Scramble</button>
+    <button name="game" value="memory">🧠 Emoji Memory</button>
+    <button name="game" value="speed">🏁 Fast Math</button>
+    <button name="game" value="typing">⌨️ Typing Speed</button>
+
+  </form>
+</div>
+
+<?php if ($game && !$result): ?>
+  
+  
+  <div class="game-container">
+
+    <form method="post">
+      <input type="hidden" name="game" value="<?= $game ?>">
+      <?php if ($game === 'rps'): ?>
+        <label><input type="radio" name="rps_choice" value="rock" required> Rock</label>
+        <label><input type="radio" name="rps_choice" value="paper"> Paper</label>
+        <label><input type="radio" name="rps_choice" value="scissors"> Scissors</label>
+      <?php elseif ($game === 'guess'): ?>
+        <label>Guess a number (1–20): <input type="number" name="guess_input" min="1" max="20" required></label>
+      <?php elseif ($game === 'math'):
+          $a = rand(1, 10); $b = rand(1, 10);
+          $_SESSION['math_answer'] = $a + $b;
+          echo "<label>What is $a + $b? <input type='number' name='math_answer' required></label>";
+      ?>
+      <?php elseif ($game === 'scramble'):
+          $words = ['planet', 'banana', 'rocket', 'coding', 'winter'];
+          $word = $words[array_rand($words)];
+          $_SESSION['scramble_word'] = $word;
+          $scrambled = str_shuffle($word);
+          echo "<label>Unscramble this word: <b>$scrambled</b></label><br><input type='text' name='scramble_guess' required>";
+      ?>
+      <?php elseif ($game === 'speed'): ?>
+  <?php 
+    
+    if (!isset($_SESSION['speed_question']) || !isset($_SESSION['speed_answer'])) {
+        $a = rand(10, 99);
+        $b = rand(10, 99);
+        $_SESSION['speed_answer'] = $a + $b;
+        $_SESSION['speed_question'] = "What is $a + $b?";
+        $_SESSION['speed_time'] = time();
+    }
+  ?>
+  <label><?= $_SESSION['speed_question'] ?></label><br>
+  <label>Answer: <input type="number" name="speed_answer" required></label>
+<?php elseif ($game === 'typing'): ?>
+  <?php 
+    if (!isset($_SESSION['typing_sentence'])) {
+      $sentences = [
+        "The quick brown fox jumps over the lazy dog",
+        "PHP is fun to learn and powerful",
+        "Sea breeze feels nice on a sunny day"
+      ];
+      $sentence = $sentences[array_rand($sentences)];
+      $_SESSION['typing_sentence'] = $sentence;
+      $_SESSION['typing_start'] = microtime(true);
+    }
+  ?>
+  <label>Type this sentence:</label><br>
+  <b><?= htmlspecialchars($_SESSION['typing_sentence']) ?></b><br>
+  <label>Retype: <input type="text" name="typed" required style="width: 90%;"></label>
+
+
+      <?php endif; ?>
+      <br><button type="submit" name="play_game">Play</button>
+    </form>
+  </div>
+<?php endif; ?>
+
+<?php if ($result): ?>
+ <div class="game-container">
+
+    <strong>Result:</strong> <?= $result ?>
+  </div>
+<?php endif; ?>
 
 <?php if (!$showContent): ?>
 <form method="post">
@@ -307,30 +615,28 @@ document.addEventListener('DOMContentLoaded', function () {
       <input type="hidden" name="show" value="1">
       <img id="preview" />
     </form>
-    <?php if (!empty($uploadSuccess)) echo "<p style='color:green;'>uploaded!</p>"; ?>
+    <?php if (!empty($uploadSuccess)) echo "<p style='color:green;'></p>"; ?>
     <?php if (!empty($uploadError)) echo "<p style='color:red;'>$uploadError</p>"; ?>
 
 
-    <form method="post">
-      <input type="hidden" name="show" value="1" />
-      <input type="hidden" name="slide" value="<?= $nextSlide ?>" />
-    <div class="slide-container">
-  <img src="<?= $images[$currentSlide] ?>" alt="Slide" class="slide-image" />
-  <?php
-    $filename = basename($images[$currentSlide]);
-    if (isset($descriptions[$filename])) {
-        echo "<div class='image-description'>";
-        foreach ($descriptions[$filename] as $key => $value) {
-            echo "<p><strong>$key:</strong> $value</p>";
-        }
-        echo "</div>";
-    }
-  ?>
-</div>
+   <?php if ($showContent && count($images) > 0): ?>
+  <div class="slide-container">
+    <img src="<?= htmlspecialchars($images[$currentSlide]) ?>" alt="Slide Image" class="slide-image" />
+    
+    <?php if (!empty($descriptions[$currentSlide])): ?>
+      <div class="image-description">
+        <p><?= htmlspecialchars($descriptions[$currentSlide]) ?></p>
+      </div>
+    <?php endif; ?>
 
-      <br />
-      <input type="submit" value="Next Image" />
+    <form method="POST">
+      <input type="hidden" name="slide" value="<?= $nextSlide ?>">
+      <input type="hidden" name="show" value="1">
+      <button type="submit">➡️ Next</button>
     </form>
+  </div>
+<?php endif; ?>
+
   </div>
 
   <div class="chat-box" id="chat">
@@ -380,9 +686,6 @@ function previewImage(event) {
   reader.readAsDataURL(event.target.files[0]);
 }
 </script>
-
 <footer>&copy; <?= date("Y") ?> wealthDEV — All rights reserved</footer>
-
-
 </body>
 </html>
