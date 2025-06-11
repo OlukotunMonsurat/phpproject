@@ -398,26 +398,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['play_game'])) {
     $result = "Start flipping! Memory game coming soon!";
     break;
 
-case 'speed':
-    $a = rand(10, 99);
-    $b = rand(10, 99);
-    $_SESSION['speed_answer'] = $a + $b;
-    $_SESSION['speed_time'] = time();
-    $result = "What is $a + $b?";
-    break;
-
-case 'typing':
-    $sentences = [
-      "The quick brown fox jumps over the lazy dog",
-      "PHP is fun to learn and powerful",
-      "Sea breeze feels nice on a sunny day"
-    ];
-    $sentence = $sentences[array_rand($sentences)];
-    $_SESSION['typing_sentence'] = $sentence;
-    $_SESSION['typing_start'] = microtime(true);
-    $result = "Type this: <br><b>$sentence</b>";
-    break;
-
         case 'rps':
             $choices = ['rock', 'paper', 'scissors'];
             $user = $_POST['rps_choice'];
@@ -546,7 +526,7 @@ case 'typing':
           echo "<label>What is $a + $b? <input type='number' name='math_answer' required></label>";
       ?>
       <?php elseif ($game === 'scramble'):
-          $words = ['planet', 'banana', 'rocket', 'coding', 'winter'];
+          $words = ['planet', 'banana', 'rocket', 'coding', 'winter', 'summer', 'wealth' , 'developer'];
           $word = $words[array_rand($words)];
           $_SESSION['scramble_word'] = $word;
           $scrambled = str_shuffle($word);
@@ -571,7 +551,11 @@ case 'typing':
       $sentences = [
         "The quick brown fox jumps over the lazy dog",
         "PHP is fun to learn and powerful",
-        "Sea breeze feels nice on a sunny day"
+        "Sea breeze feels nice on a sunny day",
+        "Website developed by wealthDev",
+        "PHP is a sever side language",
+        "Make hey while the sun shine"
+        
       ];
       $sentence = $sentences[array_rand($sentences)];
       $_SESSION['typing_sentence'] = $sentence;
